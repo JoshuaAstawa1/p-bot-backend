@@ -10,5 +10,11 @@
     "binance_api": {
         "api_key": 0,
         "api_secret": 0
+    },
+    "mongoose": {
+        "host": "mongodb+srv://",
+        "user": "p-bot2-dev",
+        "password": "WhiteOxNoF1lter",
+        "database": "@binance-daily-prices-de.y1qcs.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
     }
 }

@@ -2,9 +2,10 @@ const express = require('express');
 const config = require('config');
 const SERVER_PORT = config.get("app.port");
 const binance = require('./config/binance');
-const axios = require('axios');
+// const axios = require('axios');
+// const moment = require('moment-timezone');
 
-// Importing the express js module into the application
+const dailyPricesSchema = require('./database_models/daily-prices')
 
 // Initializing the app using the express module
 const app = express() // app instance
@@ -16,34 +17,45 @@ app.use(express.json())
 // Components
 // app.use('/dashboard', require('./components/dashboard/routes'))
 
-// Using the app we are configuring the route of "GET" and path is "/"
-// app.get('/', (req, res) => {
-//     // HISTORICAL
-//     binance.candlesticks("BTCUSDT", "1d", (error, ticks, symbol) => {
-//         console.info("candlesticks()", ticks);
-//         let last_tick = ticks[ticks.length - 1];
-//         let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] = last_tick;
-//         console.info(symbol + " last close: " + close);
-//     }, { limit: 500, endTime: 1514764800000 });
-//     // res.send("")
-// })
-
 app.get('/', (req, res) => {
-    // REAL-TIME
-    binance.websockets.candlesticks(['BTCUSDT'], "1d", (candlesticks) => {
-        let { e: eventType, E: eventTime, s: symbol, k: ticks } = candlesticks;
-        let { o: open, h: high, l: low, c: close, v: volume, n: trades, i: interval, x: isFinal, q: quoteVolume, V: buyVolume, Q: quoteBuyVolume } = ticks;
-        console.info(symbol + " " + interval + " candlestick update");
-        console.info("open: " + open);
-        console.info("high: " + high);
-        console.info("low: " + low);
-        console.info("close: " + close);
-        console.info("volume: " + volume);
-        console.info("isFinal: " + isFinal);
-    });
-    // res.send("")
-})
+    // Binance websocket stream (BTCUSDT)
+    binance.onmessage = async (event) => {
+        const klineParsed = JSON.parse(event.data);
+        console.log(klineParsed);
+        /*
+        await dailyPricesSchema.create(
+            {
+                type: klineParsed.e,
+                time: klineParsed.E,
+                symbol: klineParsed.s,
+                data: {
+                    start_time: klineParsed.t,
+                    close_time: klineParsed.T,
+                    symbol: klineParsed.s,
+                    interval: klineParsed.i,
+                    open_price: klineParsed.o,
+                    close_price: klineParsed.c,
+                    high_price: klineParsed.h,
+                    low_price: klineParsed.l,
+                    baseAssetVolume: klineParsed.v,
+                    tradeCount: klineParsed.n,
+                    klineClosed: klineParsed.x,
+                    quoteAssetVolume: klineParsed.q,
+                    buyBaseVolume: klineParsed.V,
+                    buyAssetVolume: klineParsed.Q,
+                    ignored: klineParsed.B
+                }
+            })
+            .then(() => {
+                console.log("Data inserted")
+            }).catch((err) => {
+                console.log(err)
+            });
+            */
+    }
+});
 
+// Using the app we are configuring the route of "GET" and path is "/"
 app.listen(SERVER_PORT, () => {
     console.log(`Server is listening on: ${SERVER_PORT}`)
 })
